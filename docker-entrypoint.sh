@@ -23,20 +23,31 @@ file_env() {
 	unset "$fileVar"
 }
 
-if [ -n "${APACHE_RUN_USER:-}" ] || [ -n "${APACHE_RUN_GROUP:-}" ] && [ -n "${APACHE_RUN_UID:-}" ]; then
-    echo >&2 'Cannot specify APACHE_RUN_UID with APACHE_RUN_GROUP or with APACHE_RUN_USER'
+if [ -n "${APACHE_RUN_USER:-}" ] && [ -n "${APACHE_RUN_UID:-}" ]; then
+    echo >&2 'Cannot specify APACHE_RUN_UID with APACHE_RUN_USER'
     exit 1
 fi
 
-if [ -n "${APACHE_RUN_UID:-}" ]; then
+if [ -n "${APACHE_RUN_GROUP:-}" ] && [ -n "${APACHE_RUN_GID:-}" ]; then
+    echo >&2 'Cannot specify APACHE_RUN_GID with APACHE_RUN_GROUP'
+    exit 1
+fi
+
+if [ -n "${APACHE_RUN_GID:-}" ]; then
     if [ ! $(getent group apache) ]; then
         addgroup --gid ${APACHE_RUN_UID} apache
     fi
+    export APACHE_RUN_GROUP=apache
+    echo "Changing service GID to ${APACHE_RUN_GID}."
+else
+    export APACHE_RUN_GROUP=www-data
+fi
+
+if [ -n "${APACHE_RUN_UID:-}" ]; then
     if [ ! $(getent passwd apache) ]; then
-        adduser --gecos "" --home /var/www --ingroup apache --no-create-home --disabled-password --disabled-login --uid ${APACHE_RUN_UID} apache
+        adduser --gecos "" --home /var/www --ingroup ${APACHE_RUN_GROUP} --no-create-home --disabled-password --disabled-login --uid ${APACHE_RUN_UID} apache
     fi
-    APACHE_RUN_USER=apache
-    APACHE_RUN_GROUP=apache
+    export APACHE_RUN_USER=apache
     echo "Changing service UID to ${APACHE_RUN_UID}."
 fi
 
