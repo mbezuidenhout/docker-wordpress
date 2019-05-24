@@ -144,6 +144,11 @@ EOL
 			EOF
 			chown "$user:$group" .htaccess
 		fi
+
+        if [ ! -e /etc/cron.d/wordpress ]; then
+            echo >&2 "Installing wordpress cron tasks into /etc/cron.d/wordpress"
+            echo "*/10 * * * * cd /var/www/html; php -q wp-cron.php > /dev/null 2>&1" > /etc/cron.d/wordpress
+        fi
 	fi
 
 	# allow any of these "Authentication Unique Keys and Salts." to be specified via

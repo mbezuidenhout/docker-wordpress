@@ -2,7 +2,8 @@ FROM wordpress:php7.3
 MAINTAINER Marius Bezuidenhout "marius.bezuidenhout@gmail.com"
 
 RUN apt-get update &&\
-    apt-get install --no-install-recommends --assume-yes --quiet ca-certificates curl git libxml2-dev imagemagick libmagickwand-dev &&\
+    apt-get install --no-install-recommends --assume-yes --quiet \
+        ca-certificates curl git libxml2-dev imagemagick libmagickwand-dev systemd-cron &&\
     apt-get clean &&\
     rm -rf /var/lib/apt/lists/* &&\
     ldconfig &&\
