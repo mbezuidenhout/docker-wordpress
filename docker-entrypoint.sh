@@ -83,7 +83,7 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
             openssl req -days 356 -x509 -out /etc/apache2/ssl/${hostname}.crt -keyout /etc/apache2/ssl/${hostname}.key \
                 -newkey rsa:2048 -nodes -sha256 \
                 -subj '/CN='${hostname} -extensions EXT -config <( \
-            printf "[dn]\nCN=${hostname}\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+            printf "[dn]\nCN=${hostname}\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:${hostname}\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
         fi
         cat > /etc/apache2/sites-available/${hostname}-ssl.conf <<EOL
         <IfModule mod_ssl.c>
@@ -146,8 +146,14 @@ EOL
 		fi
 
         if [ ! -e /etc/cron.d/wordpress ]; then
+            if [[ $HTTPS_ENABLED != "false" ]]; then
+                proto="https"
+            else
+                proto="http"
+            fi
+            cronurl="${proto}://${hostname}/wp-cron.php?doing_wp_cron"
             echo >&2 "Installing wordpress cron tasks into /etc/cron.d/wordpress"
-            echo "*/10 * * * * cd /var/www/html; php -q wp-cron.php > /dev/null 2>&1" > /etc/cron.d/wordpress
+            echo "*/10 * * * * curl -fk ${cronurl} > /dev/null 2>&1" > /etc/cron.d/wordpress
         fi
 	fi
 
