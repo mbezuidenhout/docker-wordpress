@@ -10,8 +10,9 @@ RUN apt-get update &&\
     docker-php-ext-install soap bcmath exif opcache
 
 # Install imagick
-RUN yes | pecl install imagick \
-    && echo "extension=$(find /usr/local/lib/php/extensions/ -name imagick.so)" > /usr/local/etc/php/conf.d/imagick.ini
+#RUN yes | pecl install imagick \
+#    && echo "extension=$(find /usr/local/lib/php/extensions/ -name imagick.so)" > /usr/local/etc/php/conf.d/imagick.ini
+# Now included in the wordpress:php7.3 image
 
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
