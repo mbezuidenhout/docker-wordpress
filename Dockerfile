@@ -7,7 +7,7 @@ RUN apt-get update &&\
     apt-get clean &&\
     rm -rf /var/lib/apt/lists/* &&\
     ldconfig &&\
-    docker-php-ext-install soap bcmath exif opcache
+    docker-php-ext-install soap
 
 # Install imagick
 #RUN yes | pecl install imagick \
