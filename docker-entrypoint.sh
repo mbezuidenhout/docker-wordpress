@@ -35,7 +35,7 @@ fi
 
 if [ -n "${APACHE_RUN_GID:-}" ]; then
     if [ ! $(getent group apache) ]; then
-        addgroup --gid ${APACHE_RUN_UID} apache
+        addgroup --gid ${APACHE_RUN_GID} apache
     fi
     export APACHE_RUN_GROUP=apache
     echo "Changing service GID to ${APACHE_RUN_GID}."
