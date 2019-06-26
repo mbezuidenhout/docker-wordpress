@@ -38,6 +38,7 @@ if [ -n "${APACHE_RUN_GID:-}" ]; then
         addgroup --gid ${APACHE_RUN_GID} apache
     fi
     export APACHE_RUN_GROUP=apache
+    sed -ri -e "s/^Group.*$/Group ${APACHE_RUN_GROUP}/" /etc/apache2/apache2.conf
     echo "Changing service GID to ${APACHE_RUN_GID}."
 else
     export APACHE_RUN_GROUP=www-data
@@ -48,6 +49,7 @@ if [ -n "${APACHE_RUN_UID:-}" ]; then
         adduser --gecos "" --home /var/www --ingroup ${APACHE_RUN_GROUP} --no-create-home --disabled-password --disabled-login --uid ${APACHE_RUN_UID} apache
     fi
     export APACHE_RUN_USER=apache
+    sed -ri -e "s/^User.*$/User ${APACHE_RUN_USER}/" /etc/apache2/apache2.conf
     echo "Changing service UID to ${APACHE_RUN_UID}."
 fi
 
