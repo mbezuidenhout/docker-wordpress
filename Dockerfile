@@ -1,5 +1,9 @@
+#
+# WordPress Dockerfile
+#
+
 FROM wordpress:php7.3
-MAINTAINER Marius Bezuidenhout "marius.bezuidenhout@gmail.com"
+LABEL maintainer="Marius Bezuidenhout <marius.bezuidenhout@gmail.com>"
 
 RUN apt-get update &&\
     apt-get install --no-install-recommends --assume-yes --quiet \
@@ -8,11 +12,6 @@ RUN apt-get update &&\
     rm -rf /var/lib/apt/lists/* &&\
     ldconfig &&\
     docker-php-ext-install soap
-
-# Install imagick
-#RUN yes | pecl install imagick \
-#    && echo "extension=$(find /usr/local/lib/php/extensions/ -name imagick.so)" > /usr/local/etc/php/conf.d/imagick.ini
-# Now included in the wordpress:php7.3 image
 
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
