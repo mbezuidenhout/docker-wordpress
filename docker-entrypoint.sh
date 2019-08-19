@@ -52,6 +52,7 @@ if [ -n "${APACHE_RUN_UID:-}" ]; then
     sed -ri -e "s/^User.*$/User ${APACHE_RUN_USER}/" /etc/apache2/apache2.conf
     echo "Changing service UID to ${APACHE_RUN_UID}."
 fi
+chown -R "${APACHE_RUN_USER}:${APACHE_RUN_GROUP}" ./
 
 if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 	if [ "$(id -u)" = '0' ]; then
