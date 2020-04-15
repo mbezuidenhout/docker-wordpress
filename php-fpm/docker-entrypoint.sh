@@ -23,59 +23,37 @@ file_env() {
 	unset "$fileVar"
 }
 
-if [ -n "${APACHE_RUN_USER:-}" ] && [ -n "${APACHE_RUN_UID:-}" ]; then
-    echo >&2 'Cannot specify APACHE_RUN_UID with APACHE_RUN_USER'
-    exit 1
-fi
-
-if [ -n "${APACHE_RUN_GROUP:-}" ] && [ -n "${APACHE_RUN_GID:-}" ]; then
-    echo >&2 'Cannot specify APACHE_RUN_GID with APACHE_RUN_GROUP'
-    exit 1
-fi
-
-if [ -n "${APACHE_RUN_GID:-}" ]; then
-    if [ ! $(getent group apache) ]; then
-        addgroup --gid ${APACHE_RUN_GID} apache
-    fi
-    export APACHE_RUN_GROUP=apache
-    sed -ri -e "s/^Group.*$/Group ${APACHE_RUN_GROUP}/" /etc/apache2/apache2.conf
-    echo "Changing service GID to ${APACHE_RUN_GID}."
-else
-    export APACHE_RUN_GROUP=www-data
-fi
-
-if [ -n "${APACHE_RUN_UID:-}" ]; then
-    if [ ! $(getent passwd apache) ]; then
-        adduser --gecos "" --home /var/www --ingroup ${APACHE_RUN_GROUP} --no-create-home --disabled-password --disabled-login --uid ${APACHE_RUN_UID} apache
-    fi
-    export APACHE_RUN_USER=apache
-    sed -ri -e "s/^User.*$/User ${APACHE_RUN_USER}/" /etc/apache2/apache2.conf
-    echo "Changing service UID to ${APACHE_RUN_UID}."
-fi
-chown -R "${APACHE_RUN_USER}:${APACHE_RUN_GROUP}" ./
-
-if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
-	if [ "$(id -u)" = '0' ]; then
-		case "$1" in
-			apache2*)
-				user="${APACHE_RUN_USER:-www-data}"
-				group="${APACHE_RUN_GROUP:-www-data}"
-
-				# strip off any '#' symbol ('#1000' is valid syntax for Apache)
-				pound='#'
-				user="${user#$pound}"
-				group="${group#$pound}"
-				;;
-			*) # php-fpm
-				user='www-data'
-				group='www-data'
-				;;
-		esac
+if [ -n "${RUN_GID:-}" ]; then
+	echo "Changing process GID to ${RUN_GID}."
+	if [ ! $(getent group ${RUN_GID}) ]; then
+		export RUN_GROUP=custom-group
+		addgroup -gid ${RUN_GID} ${RUN_GROUP}
 	else
-		user="$(id -u)"
-		group="$(id -g)"
+		export RUN_GROUP=$(getent group ${RUN_GID} | awk -F ":" '{ print $1 }')
 	fi
+	if [[ "$1" == apache2* ]]; then
+		sed -ri -e "s/^Group.*$/Group ${RUN_GROUP}/" /etc/apache2/apache2.conf
+	elif [ "$1" == php-fpm ]; then
+		sed -ri -e "s/^group.*$/group = ${RUN_GROUP}/" /usr/local/etc/php-fpm.d/www.conf
+	fi
+fi
 
+if [ -n "${RUN_UID:-}" ]; then
+	echo "Changing process UID to ${RUN_UID}."
+	if [ ! $(getent passwd ${RUN_UID}) ]; then
+		export RUN_USER=custom-user
+		adduser --gecos "" --home /var/www --ingroup ${RUN_GROUP} --no-create-home --disabled-password --disabled-login --uid ${RUN_UID} ${RUN_USER}
+	else
+		export RUN_USER=$(getent passwd ${RUN_UID} | awk -F ":" '{ print $1 }')
+	fi
+	if [[ "$1" == apache2* ]]; then
+		sed -ri -e "s/^User.*$/User ${RUN_USER}/" /etc/apache2/apache2.conf
+	elif [ "$1" == php-fpm ]; then
+		sed -ri -e "s/^user.*$/user = ${RUN_USER}/" /usr/local/etc/php-fpm.d/www.conf
+	fi
+fi
+
+if [[ "$1" == apache2* ]]; then
     : ${HTTPS_ENABLED:=false}
     hostname="${APACHE_HOSTNAME:-localhost}"
 
@@ -104,6 +82,23 @@ EOL
         a2enmod ssl
         a2ensite ${hostname}-ssl
     fi
+fi
+
+if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
+	if [ "$(id -u)" = '0' ]; then
+		user="${RUN_USER:-www-data}"
+		group="${RUN_GROUP:-www-data}"
+
+		if [[ "$1" == apache2* ]]; then
+			# strip off any '#' symbol ('#1000' is valid syntax for Apache)
+			pound='#'
+			user="${user#$pound}"
+			group="${group#$pound}"
+		fi
+	else
+		user="$(id -u)"
+		group="$(id -g)"
+	fi
 
 	if [ ! -e index.php ] && [ ! -e wp-includes/version.php ]; then
 		# if the directory exists and WordPress doesn't appear to be installed AND the permissions of it are root:root, let's chown it (likely a Docker-created directory)
@@ -148,6 +143,8 @@ EOL
 			chown "$user:$group" .htaccess
 		fi
 
+    	: ${HTTPS_ENABLED:=false}
+    	hostname="${APACHE_HOSTNAME:-localhost}"
         if [ ! -e /etc/cron.d/wordpress ]; then
             if [[ $HTTPS_ENABLED != "false" ]]; then
                 proto="https"
@@ -231,7 +228,7 @@ EOL
 				}
 				{ print }
 			' wp-config-sample.php > wp-config.php <<'EOPHP'
-// If we're behind a proxy server and using HTTPS, we need to alert Wordpress of that fact
+// If we're behind a proxy server and using HTTPS, we need to alert WordPress of that fact
 // see also http://codex.wordpress.org/Administration_Over_SSL#Using_a_Reverse_Proxy
 if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
 	$_SERVER['HTTPS'] = 'on';
