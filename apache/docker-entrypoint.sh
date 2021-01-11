@@ -23,7 +23,7 @@ file_env() {
 	unset "$fileVar"
 }
 
-if [[ "$1" == apache2* ]]; then;
+if [[ "$1" == apache2* ]]; then
 	if [ -n "${APACHE_RUN_USER:-}" ] && [ -n "${APACHE_RUN_UID:-}" ]; then
 		echo >&2 'Cannot specify APACHE_RUN_UID with APACHE_RUN_USER'
 		exit 1
