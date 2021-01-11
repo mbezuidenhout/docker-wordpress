@@ -53,6 +53,8 @@ if [[ "$1" == apache2* ]]; then
 		sed -ri -e "s/^User.*$/User ${APACHE_RUN_USER}/" /etc/apache2/apache2.conf
 		echo "Changing service UID to ${APACHE_RUN_UID}."
 	fi
+    : ${APACHE_RUN_USER:=www-data}
+    : ${APACHE_RUN_GROUP:=www-data}
 	chown -R "${APACHE_RUN_USER}:${APACHE_RUN_GROUP}" ./
 
 
