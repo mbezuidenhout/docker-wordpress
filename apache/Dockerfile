@@ -2,7 +2,7 @@
 # WordPress Dockerfile
 #
 
-FROM wordpress:php7.4
+FROM wordpress:php8.0
 LABEL maintainer="Marius Bezuidenhout <marius.bezuidenhout@gmail.com>"
 
 RUN apt-get update &&\
@@ -14,6 +14,8 @@ RUN apt-get update &&\
     docker-php-ext-install soap
 
 COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD ["apache2-foreground"]
