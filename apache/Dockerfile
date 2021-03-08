@@ -2,7 +2,7 @@
 # WordPress Dockerfile
 #
 
-FROM wordpress:php8.0
+FROM wordpress:php7.4
 LABEL maintainer="Marius Bezuidenhout <marius.bezuidenhout@gmail.com>"
 
 RUN apt-get update &&\
