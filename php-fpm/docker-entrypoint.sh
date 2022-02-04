@@ -54,10 +54,10 @@ if [ -n "${RUN_UID:-}" ]; then
 fi
 
 if [[ "$1" == apache2* ]]; then
-    : ${HTTPS_ENABLED:=false}
+    : ${HTTPS_ENABLED:=true}
     hostname="${APACHE_HOSTNAME:-localhost}"
 
-    if [[ $HTTPS_ENABLED != "false" ]]; then
+    if [[ $HTTPS_ENABLED == "true" ]]; then
         if [ ! -e /etc/apache2/ssl/${hostname}.crt ] || [ ! -e /etc/apache2/ssl/${hostname}.key ]; then
             # if the certificates don't exist then make them
             mkdir -p /etc/apache2/ssl
