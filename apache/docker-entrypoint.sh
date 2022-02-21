@@ -55,7 +55,11 @@ if [[ "$1" == apache2* ]]; then
 	fi
     : ${APACHE_RUN_USER:=www-data}
     : ${APACHE_RUN_GROUP:=www-data}
-	chown -R "${APACHE_RUN_USER}:${APACHE_RUN_GROUP}" ./
+    
+    : ${FIX_PERMISSIONS:=false}
+    if [[ $FIX_PERMISSIONS == "true" ]]; then
+	  chown -R "${APACHE_RUN_USER}:${APACHE_RUN_GROUP}" ./
+    fi
 
 
     : ${HTTPS_ENABLED:=true}
