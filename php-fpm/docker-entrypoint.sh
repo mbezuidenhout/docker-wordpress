@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+## TEMP File
+TFILE=`mktemp --tmpdir tfile.XXXX`
+trap "rm -f $TFILE" 0 1 2 3 15
+## trap Deletes TFILE on Exit
+
 # usage: file_env VAR [DEFAULT]
 #    ie: file_env 'XYZ_DB_PASSWORD' 'example'
 # (will allow for "$XYZ_DB_PASSWORD_FILE" to fill in the value of
@@ -214,7 +219,14 @@ if [[ "$1" == apache2* ]] || [ "$1" == php-fpm ]; then
 		# version 4.4.1 decided to switch to windows line endings, that breaks our seds and awks
 		# https://github.com/docker-library/wordpress/issues/116
 		# https://github.com/WordPress/WordPress/commit/1acedc542fba2482bab88ec70d4bea4b997a92e4
-		sed -ri -e 's/\r$//' wp-config*
+        unix_line_ends() {
+            if [ -e "$1" ]; then
+                sed -r -e 's/\r$//' "$1" > "$TFILE"
+                cat "$TFILE" > $1
+            fi
+        }
+        unix_line_ends "wp-config-sample.php"
+        unix_line_ends "wp-config.php"
 
 		if [ ! -e wp-config.php ]; then
 			awk '
@@ -269,7 +281,8 @@ EOPHP
 				start="^(\s*)$(sed_escape_lhs "$key")\s*="
 				end=";"
 			fi
-			sed -ri -e "s/($start\s*).*($end)$/\1$(sed_escape_rhs "$(php_escape "$value" "$var_type")")\3/" wp-config.php
+			sed -r -e "s/($start\s*).*($end)$/\1$(sed_escape_rhs "$(php_escape "$value" "$var_type")")\3/" wp-config.php > "$TFILE"
+            cat "$TFILE" > wp-config.php
 		}
 
 		set_config 'DB_HOST' "$WORDPRESS_DB_HOST"
