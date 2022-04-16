@@ -2,7 +2,7 @@
 # WordPress Dockerfile
 #
 
-FROM wordpress:php8.1-fpm
+FROM wordpress:php7.4-fpm
 LABEL maintainer="Marius Bezuidenhout <marius.bezuidenhout@gmail.com>"
 
 RUN apt-get update &&\
