@@ -11,7 +11,7 @@ RUN apt-get update &&\
     apt-get clean &&\
     rm -rf /var/lib/apt/lists/* &&\
     ldconfig &&\
-    docker-php-ext-install soap intl
+    docker-php-ext-install soap intl pdo_mysql
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
