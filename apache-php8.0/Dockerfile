@@ -2,6 +2,20 @@
 # WordPress Dockerfile
 #
 
+ARG GO_IMAGE=golang:1.21-alpine
+
+FROM ${GO_IMAGE} as step-builder
+
+COPY step-builder.sh /usr/local/bin/step-builder.sh
+
+RUN apk add curl git make \
+    && git clone https://github.com/smallstep/cli.git step-cli \
+    && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.55.2 \
+    && chmod +x /usr/local/bin/step-builder.sh \
+    && cd step-cli \
+    && make bootstrap \
+    && /usr/local/bin/step-builder.sh
+
 FROM wordpress:php8.0
 LABEL maintainer="Marius Bezuidenhout <marius.bezuidenhout@gmail.com>"
 
@@ -12,6 +26,8 @@ RUN apt-get update &&\
     rm -rf /var/lib/apt/lists/* &&\
     ldconfig &&\
     docker-php-ext-install soap intl pdo_mysql
+
+COPY --from=step-builder /usr/local/bin/step /usr/local/bin
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
