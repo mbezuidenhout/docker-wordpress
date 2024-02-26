@@ -2,7 +2,7 @@
 # WordPress Dockerfile
 #
 
-ARG GO_IMAGE=golang:1.19-alpine
+ARG GO_IMAGE=golang:alpine
 
 FROM ${GO_IMAGE} as step-builder
 
@@ -10,7 +10,7 @@ COPY step-builder.sh /usr/local/bin/step-builder.sh
 
 RUN apk add curl git make \
     && git clone https://github.com/smallstep/cli.git step-cli \
-    && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.55.2 \
+    && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin latest \
     && chmod +x /usr/local/bin/step-builder.sh \
     && cd step-cli \
     && make bootstrap \
