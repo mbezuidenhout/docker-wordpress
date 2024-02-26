@@ -16,7 +16,7 @@ RUN apk add curl git make \
     && make bootstrap \
     && /usr/local/bin/step-builder.sh
 
-FROM wordpress:php7.4
+FROM wordpress:php8.1
 LABEL maintainer="Marius Bezuidenhout <marius.bezuidenhout@gmail.com>"
 
 RUN apt-get update &&\
@@ -33,7 +33,7 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
     && cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini \
     && sed -i -e 's/expose_php = On/expose_php = Off/' /usr/local/etc/php/php.ini \
-    && echo "opcache.interned_strings_buffer=16\nopcache.max_accelerated_files=5000\nopcache.memory_consumption=192" > /usr/local/etc/php/conf.d/opcache-zzz.ini
+    && echo "opcache.interned_strings_buffer=16\nopcache.max_accelerated_files=5000\nopcache.memory_consumption=192\nopcache.jit_buffer_size=256M" > /usr/local/etc/php/conf.d/opcache-zzz.ini
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD ["apache2-foreground"]
