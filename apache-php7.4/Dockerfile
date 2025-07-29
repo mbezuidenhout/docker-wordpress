@@ -4,7 +4,7 @@
 
 ARG GO_IMAGE=golang:alpine
 
-FROM ${GO_IMAGE} as step-builder
+FROM ${GO_IMAGE} AS step-builder
 
 COPY step-builder.sh /usr/local/bin/step-builder.sh
 
